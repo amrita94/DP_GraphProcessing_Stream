@@ -1,0 +1,95 @@
+\documentclass{article}
+\usepackage{verbatim}
+ \usepackage{amssymb}
+ \usepackage{amsmath}
+\usepackage{amsthm}
+ 
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\usepackage[utf8]{inputenc}
+\title{Differentially Privacy for Graph Processing in the Streaming Model}
+\date{}
+\begin{document}
+\maketitle{}
+\section{Introduction} With a deluge in the availability of voluminous data that can be generated at a rapid pace,  mining algorithms for massive data has become the order of the day. In data processing, graph based data structures are usually employed to capture the relationships existing between real-world entities. The vertex-edge construct of a graph can be used to model a variety of data settings - vertices represent data  entities, such as users, telecommunication devices, or websites, while edges represent connections and interactions occurring between them. Examples include  webpage click trackers mapping web-pages and hyperlinks, people and their relationship in social media networks, network flows across IP-addresses, even biological networks like protein interaction networks and brain mappings of neurons and synapses et al. 
+\par The resulting graphs of the aforementioned settings are marked by the following two characteristics 
+\begin{enumerate}\item Firstly, a  general trait common to all these settings is that the amount of data to be analyzed and gleaned for information is massive. For example  web crawls by large search engines currently consist of over one trillion links and are expected to exceed ten trillion within the year. %Individual websites also contain enormous graph data. 
+Facebook consists of 2 billion nodes and over 300 billion friend links. 
+Currently Twitter is estimated to have 300 million active users per month with over 10 billion social relationships. 
+
+
+This humongous size of the data makes it impossible for all the data to be stored together at once in memory with  provisions for random accessibility. Thus graph algorithms requiring access to the full input for answering every query are simply not feasible.
+
+  \item In addition to their exploding size, information flow in these graphs are highly dynamic - data is continuously generated as networks are evolving. For example major social networks are constantly experiencing massive growth in their user base, as well as in a number of daily active users and activities. Facebook reports an  yearly increase of 17 percent in their user base which leads to an average of 8500 new comments and 4800 statuses being posted on the  social media siteevery second. Similarly, on an average active Twitter users are creating 500 million tweets per day or 6000 tweets per second. Thus the graphs modeling such time-evolving real-world networks are being constantly modified in the form of addition or removal of edges. These changes in the graph data mirror the dynamics of their representative organizations, and in most cases near real-time knowledge extraction is desirable.
+ \end{enumerate}
+ The aforementioned premises for massive graphs spells doom for their processing in the classical setting (i.e. traditional setting where a static graph is analyzed). "Normal" graph algorithms, which are characterized by random  and unlimited input access, are simply not equipped to handle the special restrictions for such massive graphs. Hence in practice, they are instead processed in the streaming model. In a streaming model, the inputs are  processed sequentially in the order of their arrival with limited memory access.   
+ \par Since people especially social media data captures the interactions and relations. Sensitive For example information about "Friends" in Facebook can reveal one's sexual orientation \cite{}. Simple privacy practice like deanonymization falls grossly short in terms of achieveing meaningful privacy  as is  manifested by multiple attacks \cite{1},\cite{2},\cite{3},\cite{4}. 
+ 
+Thus while releasing statistics or synthetic data based on such sensitive data sets, one
+must balance the inherent tradeoff between the usefulness of the released information and the privacy
+of the affected individuals. Against this backdrop, differential privacy has emerged as a
+compelling privacy definition that allows one to understand this tradeoff via formal, provable guarantees. It is based on the principle that the output
+of a computation should not allow inference about any
+record’s presence in or absence from the computation’s input.
+Formally, it requires that for any outcome of a randomized
+computation, that outcome should be nearly equally
+likely with and without any one record. 
+\par Although there has been separate works in differentially private streaming model  and differentially private graph algorithms in the classical setting  there is a dearth of work addressing the privacy concerns of large-scale graph processing in the streaming model. In this paper, we will attempt to marry these two settings and propose differentially private graph algorithms in the streaming data model. to the best of our knowledge this is the first attempt towards achieving differential privacy for graphs in the streaming setting.
+
+\section{Streaming Model}
+In a streaming model, the input is represented as a sequence of items that are processed as they arrive. Let us assume the following steaming model. Source stream $S$ is a sequence of tuples where each tuple is of the form $<u,s,t>$. The tuples are drawn from the domain $dom=\mathcal{U}\times\mathcal{S}\times\mathcal{T}$ where $\mathcal{U}$ is the set of user identifiers,$\mathcal{S}$ is a set of possible states, and $\mathcal{T}$ is an (infinite) set of timestamps. Each $(u, s, t )$ records an atomic event, namely that user $u$ was observed in state $s$ at time $t$. A prefix of a data stream is the sequence of  its elements up till a fixed timestamp t. A streaming algorithms is characterized as follows
+ \begin{enumerate}\item The data items are processed sequentially in their order of arrival. The semi-streaming model allows a constant number of passes over the data.
+\item The algorithm has limited memory (ideally polylog ) and cannot store the whole input sequence at once. Hence random access to data items is not permissible. 
+\item The algorithm can spend limited processing time per item. It is so because streams typically represent continuous, time-evolving data. Moreover the results are sometimes demanded in  near real-time. Thus streaming algorithms cannot afford to perform costly evaluations on each data item.  
+ \item We shall typically seek to compute only
+an estimate or approximation of the true answer based on short summaries (sketches) of the data stream. This is because many basic functions can provably not be computed
+exactly using sublinear space. For the same reason, we shall often allow randomized algorithms than may produce some errors with
+some small, but controllable, probability. 
+\end{enumerate} 
+The performance of a streaming algorithm is measured by three basic parameters:
+\begin{enumerate}\item The number of passes the algorithm must make over the stream.
+\item The memory (or space) requirement of the algorithm. 
+\item The running time of the algorithm.
+\end{enumerate}
+
+\subsection{Privacy in streaming model}
+In this section we will be discussing about the existing differential privacy practices in the general streaming model. 
+There are two standard notions of differentially private stream processing:
+\begin{enumerate} \item \textbf{Event Level Privacy} Each tuple in a data stream $S$ captures a single event. Two streams are said to be neighbors if they differ only in one tuple. Under such a scenario, a streaming algorithm is said to provide event level privacy if the output distributions of the two aforementioned streams are close. %Thus for a particular user, event level privacy hides information about a single. Event 
+\begin{definition} Two data stream prefixes $S$ and $S'$ are defined to be neighboring streams iff they only differ in a single tuple. \label{e}\end{definition}
+ \item \textbf{User level Privacy} 
+Consider the following scenario- although the probability of selecting a specific individual may be small, once a record belonging to this individual has been stored, it is implausible to deny that the individual's data appear in the data stream. This is where user level privacy comes into play to provide for plausible deniability. In other words, any two streams, one with and the other without all information of a particular individual, will produce very similar distributions on states and outputs, even though the data of an individual are interleaved arbitrarily with other data in the stream.
+\begin{definition} Two data stream prefixes $S$ and $S'$ are defined to be neighboring streams iff they only differ only in the presence or absence
+of all the tuples of a particular user $u \in \mathcal{U}$.\label{u}\end{definition}  Clearly, user level privacy is stronger guarantee than event level privacy.  \end{enumerate}  Thus $\epsilon$-differential privacy for streaming algorithms is defined as follows:
+\begin{definition}Let $\mathcal{A}$ be a randomized
+algorithm that takes as input a stream prefix of arbitrary size and
+outputs an element from a set of possible output sequences $\mathcal{O}$. Then
+$\mathcal{A}$ satisfies $\epsilon$-differential privacy if for any pair of neighboring
+stream prefixes $S$ and $S'$
+, $ \forall O \subset \mathcal{O}$,
+\begin{gather}Pr\Big[ \mathcal{A}(S) \in O \Big]\leq e^{\epsilon} \times Pr\Big[\mathcal{A}(S') \in O\Big]\end{gather}
+\end{definition} where the neighboring streams for event level privacy and user level privacy are defined  by \ref{e} and \ref{u} respectively.
+The parameter $\epsilon$ controls the privacy risk and smaller $\epsilon$ corresponds
+to stronger privacy protection. \\\textbf{Pan Privacy}  Pan privacy is an even stronger notion of privacy which strives to retain privacy properties of an algorithm even against an adversary that can, on rare occasions, gain unsolicited access to the  algorithm's internal state. Such intrusions can be surmised to occur due to many reasons, including hacking, subpoena, malicious release of data by internal worker gone rogue, or even mission creep, when the data is unwarrantably used for purposes different from the original objective of data collection.\\ A streaming algorithm progresses through a sequence of internal states.
+and produces a (possibly unbounded) sequence of outputs. Let $I$ denote
+the set of possible internal states of the algorithm, and $\sigma$ the set of
+possible output sequences. We assume that the adversary can only
+observe internal states and the output sequence; it cannot see the
+data in the stream (although it may have auxiliary knowledge about
+some of these data) and it has no access to the length of the input
+sequence. \begin{definition} An algorithm $Alg$ mapping data stream
+prefixes to the range $I \time \sigma$, is pan-private against a single intrusion
+if for all sets $I' \subset I$ of internal states and $\sigma ' \subset \sigma$ of output sequences,
+and for all pairs of adjacent data stream prefixes S, $S'$\begin{gather}Pr\Big[Alg(S) \in (I',\sigma'))\Big]\leq e^{\epsilon} \times Pr\Big[Alg(S') \in (I',\sigma'))\Big]\end{gather}
+
+where the neighboring prefixes are defined in accordance to event level or user level privacy.\end{definition}
+This definition speaks only of a single intrusion. 
+
+
+
+
+
+ \bibliography{reference}
+ \bibliographystyle{plain}
+\end{document}
